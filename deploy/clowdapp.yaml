@@ -1,0 +1,83 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  annotations:
+    description: Automatic Registration Listener.
+  name: test-shubh-github-deploy
+parameters:
+  - name: ENV_NAME
+    value: env-rhsm-api-proxy
+  - name: REPLICAS
+    value: '1'
+  - name: IMAGE
+    value: quay.io/cloudservices/rhsm-auto-registration-listener
+  - name: IMAGE_TAG
+    value: latest
+  - name: IMAGE_PULL_SECRET
+    value: quay-cloudservices-pull
+  - name: MEMORY_REQUEST
+    value: 256Mi
+  - name: MEMORY_LIMIT
+    value: 512Mi
+  - name: CPU_REQUEST
+    value: 250m
+  - name: CPU_LIMIT
+    value: 1000m
+
+objects:
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdApp
+  metadata:
+    name: test-shubh-github-deploy
+    labels:
+      deploymentconfig: test-shubh-github-deploy
+  spec:
+    envName: ${ENV_NAME}
+
+    kafkaTopics:
+      - replicas: 1
+        partitions: 1
+        topicName: platform.sources.event-stream
+      - replicas: 1
+        partitions: 1
+        topicName: dev.rhsm.cloudoreg.relay-topic.internal
+
+    pullSecrets:
+      name: ${IMAGE_PULL_SECRET}
+
+    deployments:
+      - name: listener
+        replicas: ${{REPLICAS}}
+        webServices:
+          public:
+            enabled: true
+        podSpec:
+          image: ${IMAGE}:${IMAGE_TAG}
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /actuator/health
+              port: 8000
+              scheme: HTTP
+            initialDelaySeconds: 90
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 3
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /actuator/health
+              port: 8000
+              scheme: HTTP
+            initialDelaySeconds: 90
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 3
+          resources:
+            requests:
+              cpu: ${CPU_REQUEST}
+              memory: ${MEMORY_REQUEST}
+            limits:
+              cpu: ${CPU_LIMIT}
+              memory: ${MEMORY_LIMIT}

@@ -1,0 +1,31 @@
+{
+    "metricsPath": "/metrics",
+    "metricsPort": 9000,
+    "kafka": {
+        "brokers": [
+            {
+                "hostname": "test-hostname",
+                "port": 9092,
+                "sasl": {
+                    "password": "test-password",
+                    "username": "test-username"
+                }
+            }
+        ],
+        "topics": [
+            {
+                "name": "topic-name",
+                "requestedName": "requested-name"
+            }
+        ]
+    },
+    "logging": {
+        "type": "cloudwatch",
+        "cloudwatch": {
+            "accessKeyId": "ACCESS_KEY",
+            "secretAccessKey": "SECRET_ACCESS_KEY",
+            "region": "EU",
+            "logGroup": "base_app"
+        }
+    }
+}
